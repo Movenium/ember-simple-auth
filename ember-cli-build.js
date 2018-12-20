@@ -1,6 +1,5 @@
 'use strict';
 
-/* eslint-env node */
 /* eslint-disable no-var, object-shorthand */
 
 var EmberAddon = require('ember-cli/lib/broccoli/ember-addon');
@@ -16,6 +15,13 @@ module.exports = function(defaults) {
       bootstrapVersion: 3,
       importBootstrapFont: false,
       importBootstrapCSS: true
+    },
+    fingerprint: {
+      generateAssetMap: EmberAddon.env() === 'production'
+    },
+    sourcemaps: {
+      enabled: true,
+      extensions: ['js']
     }
   });
 

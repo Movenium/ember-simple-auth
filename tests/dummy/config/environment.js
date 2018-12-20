@@ -1,12 +1,9 @@
 'use strict';
 
-/* eslint-env node */
-/* eslint-disable no-var, object-shorthand */
-
 module.exports = function(environment) {
-  var ENV = {
+  let ENV = {
     modulePrefix: 'dummy',
-    environment: environment,
+    environment,
     rootURL: '/',
     locationType: 'auto',
     EmberENV: {
@@ -34,6 +31,7 @@ module.exports = function(environment) {
     },
 
     torii: {
+      allowUnsafeRedirects: true,
       providers: {
         'facebook-oauth2': {
           apiKey: '631252926924840'
@@ -69,10 +67,15 @@ module.exports = function(environment) {
     ENV.APP.LOG_VIEW_LOOKUPS = false;
 
     ENV.APP.rootElement = '#ember-testing';
+    ENV.APP.autoboot = false;
   }
 
   if (environment === 'production') {
     // put production settings here
+    ENV.fastboot = {
+      hostWhitelist: ['ember-simple-auth.now.sh']
+    };
+    ENV.apiHost = 'https://ember-simple-auth-server.now.sh';
   }
 
   return ENV;

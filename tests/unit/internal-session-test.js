@@ -1,4 +1,5 @@
-import Ember from 'ember';
+import RSVP from 'rsvp';
+import { next } from '@ember/runloop';
 import { describe, beforeEach, it } from 'mocha';
 import { expect } from 'chai';
 import sinon from 'sinon';
@@ -7,11 +8,6 @@ import EphemeralStore from 'ember-simple-auth/session-stores/ephemeral';
 import Authenticator from 'ember-simple-auth/authenticators/base';
 
 import createWithContainer from '../helpers/create-with-container';
-
-const {
-  RSVP,
-  run: { next }
-} = Ember;
 
 describe('InternalSession', () => {
   let session;
@@ -778,6 +774,21 @@ describe('InternalSession', () => {
             next(() => {
               expect(triggered).to.be.false;
               done();
+            });
+          });
+
+          it('it does not trigger the "sessionInvalidationFailed" event', function() {
+            let triggered = false;
+            session.one('sessionInvalidationFailed', () => (triggered = true));
+
+            return session.invalidate().then(() => {
+              expect(triggered).to.be.false;
+            });
+          });
+
+          it('it returns with a resolved Promise', function() {
+            return session.invalidate().then(() => {
+              expect(true).to.be.true;
             });
           });
         });

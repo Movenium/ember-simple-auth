@@ -1,13 +1,20 @@
-import Ember from 'ember';
-import { describe, it, beforeEach, afterEach } from 'mocha';
+import { tryInvoke } from '@ember/utils';
+import {
+  describe,
+  it,
+  beforeEach,
+  afterEach
+} from 'mocha';
 import { expect } from 'chai';
 import startApp from '../helpers/start-app';
 import Pretender from 'pretender';
-import { invalidateSession, authenticateSession, currentSession } from '../helpers/ember-simple-auth';
+import {
+  invalidateSession,
+  authenticateSession,
+  currentSession
+} from '../helpers/ember-simple-auth';
 import destroyApp from '../helpers/destroy-app';
 import config from '../../config/environment';
-
-const { tryInvoke } = Ember;
 
 describe('Acceptance: Authentication', function() {
   let application;
@@ -37,7 +44,6 @@ describe('Acceptance: Authentication', function() {
         this.get(`${config.apiHost}/posts`, () => [200, { 'Content-Type': 'application/json' }, '{"data":[]}']);
       });
       authenticateSession(application, { userId: 1, otherData: 'some-data' });
-
       visit('/protected');
 
       return andThen(() => {

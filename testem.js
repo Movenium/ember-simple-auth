@@ -1,5 +1,4 @@
 /* eslint-env node */
-/* eslint-disable no-var, object-shorthand */
 
 module.exports = {
   framework: 'mocha',
@@ -15,11 +14,14 @@ module.exports = {
     Chrome: {
       mode: 'ci',
       args: [
-        '--headless',
-        '--window-size=1440,900',
+        // --no-sandbox is needed when running Chrome inside a container
+        process.env.TRAVIS ? '--no-sandbox' : null,
+
         '--disable-gpu',
-        '--remote-debugging-port=9222'
-      ]
-    }
+        '--headless',
+        '--remote-debugging-port=0',
+        '--window-size=1440,900'
+      ].filter(Boolean)
+    },
   }
 };

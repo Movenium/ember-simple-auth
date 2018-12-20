@@ -1,3 +1,73 @@
+# 1.7.0
+
+* The `baseURL` configuration property is now deprecated; use the `rootURL`
+  property instead, see #1597.
+* ESA works with ember-fetch@"^2.1.0 || ^3.0.0 || ^4.0.0 || ^5.0.0" now, see
+  #1608.
+* Session events are now bound to methods on the `application` route
+  correctly, see #1604.
+* The repeated `isFastBoot` properties used in various places in the codebase
+  have been replaced with a computed property macro, see #1623.
+* The `broccoli-file-creator` dependency has been raised to `^2.0.0`, see
+  #1636.
+* The API docs and README habe been improved for greater clarity and better
+  examples, see #1583, #1591, #1631, #1598.
+* The dummy app now implements remember-me functionality, see #1606.
+
+# 1.6.0
+
+* Authorizers are now deprecated, see #1532. For more information on the
+  deprecation, refer to the
+  [deprecation guide](https://github.com/simplabs/ember-simple-auth#deprecation-of-authorizers).
+* The
+  [session service's `invalidate` method](https://ember-simple-auth.com/api/classes/SessionService.html#method_invalidate)
+  can now be called when the session is already invalidated, and would simply
+  do nothing in that case, see #1555.
+* The previously removed `ember-simple-auth` instance initializer has been
+  added again which fixes a regression in applications that relied on its
+  existence, see #1565.
+* Usage of the private `beginPropertyChanges`/`endPropertyChanges` methods has
+  been removed, see #1554.
+
+# 1.5.1
+
+* Session restoration is now setup in an initializer (vs. an instance
+  initializer), see #1547.
+* The new acceptance test helpers introduced with 1.5.0 no longer need to
+  manually set up the router (which was using private API), see #1548.
+
+# 1.5.0
+
+* The acceptance test helpers no longer rely on the global `wait` test helper,
+  see #1516.
+* A new set of acceptance test helpers was introduced that is imported from the
+  `ember-simple-auth` module namespaces and supports Ember's new testing model,
+  see #1536.
+* The `ember-cookies` dependency now allows `^0.1.0` as well as `^0.2.0`, see
+  #1538.
+
+# 1.4.2
+
+* The broken `warn()` method on the `cookie` session store has been fixed,
+  see #1502.
+* The event listener on the `local-storage` session store is correctly removed,
+  see #1498.
+
+# 1.4.1
+
+* The `fastboot-app-server` dependency has been removed, see #1446.
+* The `torii` authenticator will no longer override the session data with the
+  data returned from the torii provider when restoring the session, see #1310.
+* `Ember.testing` is no longer destructured which could cause problems with
+  recent `ember-qunit`/`ember-cli-qunit`/`ember-test-helpers` versions, see
+  #1477.
+* The `fastboot-tests` and `guides` directories are no longer distributed with
+  the npm package, see #1470.
+* The OAuth 2.0 authenticator will now reject correctly for responses with an
+  invalid (non-JSON) response body, see #1487, #1442.
+* The cookie that stores the session cookie's expiration time is now cleared
+  when that time is set to `null`, see #1463.
+
 # 1.4.0
 
 * A new session store has been added that is based on `sessionStorage`, see

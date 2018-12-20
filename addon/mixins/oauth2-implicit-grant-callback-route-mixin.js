@@ -1,18 +1,33 @@
-import Ember from 'ember';
+import { inject as service } from '@ember/service';
+import Mixin from '@ember/object/mixin';
+import location from '../utils/location';
+import isFastBootCPM from '../utils/is-fastboot';
 
-const { inject: { service }, Mixin, computed, getOwner } = Ember;
+function _parseResponse(locationHash) {
+  let params = {};
+  const query = locationHash.substring(locationHash.indexOf('?'));
+  const regex = /([^#?&=]+)=([^&]*)/g;
+  let match;
+
+  // decode all parameter pairs
+  while ((match = regex.exec(query)) !== null) {
+    params[decodeURIComponent(match[1])] = decodeURIComponent(match[2]);
+  }
+
+  return params;
+}
 
 /**
   __This mixin is used in the callback route when using OAuth 2.0 Implicit
   Grant authentication.__ It implements the
-  {{#crossLink "OAuth2ImplicitGrantCallbackMixin/activate:method"}}{{/crossLink}}
+  {{#crossLink "OAuth2ImplicitGrantCallbackRouteMixin/activate:method"}}{{/crossLink}}
   method that retrieves and processes authentication parameters, such as
   `access_token`, from the hash parameters provided in the callback URL by
   the authentication server. The parameters are then passed to the
   {{#crossLink "OAuth2ImplicitGrantAuthenticator"}}{{/crossLink}}
 
-  @class OAuth2ImplicitGrantCallbackMixin
-  @module ember-simple-auth/mixins/ouath2-implicit-grant-callback-mixin
+  @class OAuth2ImplicitGrantCallbackRouteMixin
+  @module ember-simple-auth/mixins/oauth2-implicit-grant-callback-route-mixin
   @extends Ember.Mixin
   @public
 */
@@ -68,35 +83,12 @@ export default Mixin.create({
 
     let authenticator = this.get('authenticator');
 
-    let hash = this._parseResponse(this._windowLocationHash());
+    let hash = _parseResponse(location().hash);
 
     this.get('session').authenticate(authenticator, hash).catch((err) => {
       this.set('error', err);
     });
   },
 
-  _isFastBoot: computed(function() {
-    const fastboot = getOwner(this).lookup('service:fastboot');
-
-    return fastboot ? fastboot.get('isFastBoot') : false;
-  }),
-
-  _windowLocationHash() {
-    // we wrap this so we can stub it with sinon
-    return window.location.hash;
-  },
-
-  _parseResponse(locationHash) {
-    let params = {};
-    const query = locationHash.substring(locationHash.indexOf('?'));
-    const regex = /([^#?&=]+)=([^&]*)/g;
-    let match;
-
-    // decode all parameter pairs
-    while ((match = regex.exec(query)) !== null) {
-      params[decodeURIComponent(match[1])] = decodeURIComponent(match[2]);
-    }
-
-    return params;
-  }
+  _isFastBoot: isFastBootCPM()
 });

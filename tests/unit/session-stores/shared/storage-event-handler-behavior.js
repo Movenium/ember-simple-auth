@@ -1,9 +1,7 @@
-import Ember from 'ember';
+import { run } from '@ember/runloop';
 import { describe, beforeEach, it } from 'mocha';
 import { expect } from 'chai';
 import sinon from 'sinon';
-
-const { run } = Ember;
 
 export default function(options) {
   let store;
@@ -27,7 +25,7 @@ export default function(options) {
     it('binds to "storage" events on the window when created', function() {
       store = options.store();
 
-      expect(window.addEventListener).to.have.been.called.once;
+      expect(window.addEventListener).to.have.been.calledOnce;
     });
 
     it('triggers the "sessionDataUpdated" event when the data in the browser storage has changed', function() {
@@ -67,7 +65,7 @@ export default function(options) {
     it('unbinds from "storage" events on the window when destroyed', function() {
       run(() => store.destroy());
 
-      expect(window.removeEventListener).to.have.been.called.once;
+      expect(window.removeEventListener).to.have.been.calledOnce;
     });
   });
 }

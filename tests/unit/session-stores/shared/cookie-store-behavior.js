@@ -1,11 +1,25 @@
-import Ember from 'ember';
-import { describe, beforeEach, afterEach, it } from 'mocha';
+import { next, run } from '@ember/runloop';
+import { registerWarnHandler } from '@ember/debug';
+import {
+  describe,
+  beforeEach,
+  afterEach,
+  it
+} from 'mocha';
 import { expect } from 'chai';
 import sinon from 'sinon';
 import FakeCookieService from '../../../helpers/fake-cookie-service';
-import CookieSessionStore from 'ember-simple-auth/session-stores/cookie';
 
-const { run, run: { next } } = Ember;
+let warnings;
+registerWarnHandler((message, options, next) => {
+  // in case a deprecation is issued before a test is started
+  if (!warnings) {
+    warnings = [];
+  }
+
+  warnings.push(message);
+  next(message, options);
+});
 
 export default function(options) {
   let store;
@@ -36,11 +50,7 @@ export default function(options) {
 
   describe('#persist', function() {
     beforeEach(function() {
-      sinon.spy(CookieSessionStore.prototype, '_warn');
-    });
-
-    afterEach(function() {
-      CookieSessionStore.prototype._warn.restore();
+      warnings = [];
     });
 
     it('respects the configured cookieName', function() {
@@ -100,7 +110,8 @@ export default function(options) {
           cookieExpirationTime: 60
         });
 
-        expect(CookieSessionStore.prototype._warn).to.have.been.calledWith('The recommended minimum value for `cookieExpirationTime` is 90 seconds. If your value is less than that, the cookie may expire before its expiration time is extended (expiration time is extended every 60 seconds).');
+        expect(warnings).to.have.length(1);
+        expect(warnings[0]).to.equal('The recommended minimum value for `cookieExpirationTime` is 90 seconds. If your value is less than that, the cookie may expire before its expiration time is extended (expiration time is extended every 60 seconds).');
 
         done();
       });
@@ -281,6 +292,14 @@ export default function(options) {
       );
     });
 
+    it('clears cached expiration times when setting expiration to null', function() {
+      run(() => {
+        store.set('cookieExpirationTime', null);
+      });
+
+      expect(cookieService.clear).to.have.been.calledWith(`session-foo-expiration_time`);
+    });
+
     it('only rewrites the cookie once per run loop when multiple properties are changed', function(done) {
       run(() => {
         store.set('cookieName', 'session-bar');
@@ -288,7 +307,7 @@ export default function(options) {
       });
 
       next(() => {
-        expect(cookieSpy).to.have.been.called.once;
+        expect(cookieSpy).to.have.been.calledOnce;
         done();
       });
     });
