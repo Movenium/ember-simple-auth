@@ -38,12 +38,16 @@ const persistingProperty = function(beforeSet = function() {}) {
   ```js
   // app/controllers/login.js
   export default Ember.Controller.extend({
-    rememberMe: false,
-
-    _rememberMeChanged: Ember.observer('rememberMe', function() {
-      const expirationTime = this.get('rememberMe') ? (14 * 24 * 60 * 60) : null;
-      this.set('session.store.cookieExpirationTime', expirationTime);
-    }
+    rememberMe: computed({
+      get(key) {
+        return false;
+      },
+      set(key, value) {
+        let expirationTime = value ? (14 * 24 * 60 * 60) : null;
+        this.set('session.store.cookieExpirationTime', expirationTime);
+        return value;
+      }
+    })
   });
   ```
 
@@ -125,7 +129,7 @@ export default BaseStore.extend({
     if (isNone(value)) {
       this.get('_cookies').clear(`${this.get('cookieName')}-expiration_time`);
     } else if (value < 90) {
-      this._warn('The recommended minimum value for `cookieExpirationTime` is 90 seconds. If your value is less than that, the cookie may expire before its expiration time is extended (expiration time is extended every 60 seconds).', false, { id: 'ember-simple-auth.cookieExpirationTime' });
+      warn('The recommended minimum value for `cookieExpirationTime` is 90 seconds. If your value is less than that, the cookie may expire before its expiration time is extended (expiration time is extended every 60 seconds).', false, { id: 'ember-simple-auth.cookieExpirationTime' });
     }
   }),
 
@@ -137,22 +141,22 @@ export default BaseStore.extend({
     return owner && owner.lookup('service:fastboot');
   }),
 
-  _secureCookies: computed(function() {
+  _secureCookies() {
     if (this.get('_fastboot.isFastBoot')) {
       return this.get('_fastboot.request.protocol') === 'https';
     }
 
     return window.location.protocol === 'https:';
-  }).volatile(),
+  },
 
-  _isPageVisible: computed(function() {
+  _isPageVisible() {
     if (this.get('_fastboot.isFastBoot')) {
       return false;
     } else {
       const visibilityState = typeof document !== 'undefined' ? document.visibilityState || 'visible' : false;
       return visibilityState === 'visible';
     }
-  }).volatile(),
+  },
 
   init() {
     this._super(...arguments);
@@ -233,7 +237,7 @@ export default BaseStore.extend({
       domain: this.get('cookieDomain'),
       expires: isEmpty(expiration) ? null : new Date(expiration),
       path: this.get('cookiePath'),
-      secure: this.get('_secureCookies')
+      secure: this._secureCookies()
     };
     if (this._oldCookieName) {
       A([this._oldCookieName, `${this._oldCookieName}-expiration_time`]).forEach((oldCookie) => {
@@ -277,7 +281,7 @@ export default BaseStore.extend({
       cancel(this._renewExpirationTimeout);
       this._renewExpirationTimeout = later(this, this._renewExpiration, 60000);
     }
-    if (this.get('_isPageVisible')) {
+    if (this._isPageVisible()) {
       return this._renew();
     } else {
       return RSVP.resolve();
@@ -293,8 +297,4 @@ export default BaseStore.extend({
       this._write(data, expiration);
     }
   },
-
-  _warn() {
-    warn(...arguments);
-  }
 });

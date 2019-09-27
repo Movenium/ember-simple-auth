@@ -49,6 +49,22 @@ export default Mixin.create({
     name and header content arguments. __This property must be overridden in
     adapters using this mixin.__
 
+    When used with `ember-fetch` the `authorize` method will not be called and
+    the `headers` computed property must be used instead, e.g.:
+
+    ```js
+    export default DS.JSONAPIAdapter.extend(AdapterFetch, DataAdapterMixin, {
+      headers: computed('session.data.authenticated.token', function() {
+        const headers = {};
+        if (this.session.isAuthenticated) {
+          headers['Authorization'] = `Bearer ${this.session.data.authenticated.token}`;
+        }
+
+        return headers;
+      }),
+    });
+    ```
+
     @property authorizer
     @type String
     @default null
@@ -75,21 +91,28 @@ export default Mixin.create({
     @protected
   */
   ajaxOptions() {
-    const authorizer = this.get('authorizer');
-    assert("You're using the DataAdapterMixin without specifying an authorizer. Please add `authorizer: 'authorizer:application'` to your adapter.", isPresent(authorizer));
-
     let hash = this._super(...arguments);
     let { beforeSend } = hash;
 
-    hash.beforeSend = (xhr) => {
-      this.get('session').authorize(authorizer, (headerName, headerValue) => {
-        xhr.setRequestHeader(headerName, headerValue);
-      });
+    hash.beforeSend = xhr => {
+      if (this.get('authorizer')) {
+        const authorizer = this.get('authorizer');
+        this.get('session').authorize(authorizer, (headerName, headerValue) => {
+          xhr.setRequestHeader(headerName, headerValue);
+        });
+      } else {
+        this.authorize(xhr);
+      }
+
       if (beforeSend) {
         beforeSend(xhr);
       }
     };
     return hash;
+  },
+
+  authorize() {
+    assert('The `authorize` method should be overridden in your application adapter. It should accept a single argument, the request object.');
   },
 
   /**

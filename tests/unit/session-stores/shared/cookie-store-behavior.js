@@ -1,4 +1,5 @@
 import { next, run } from '@ember/runloop';
+import { registerWarnHandler } from '@ember/debug';
 import {
   describe,
   beforeEach,
@@ -6,11 +7,22 @@ import {
   it
 } from 'mocha';
 import { expect } from 'chai';
-import sinon from 'sinon';
+import sinonjs from 'sinon';
 import FakeCookieService from '../../../helpers/fake-cookie-service';
-import CookieSessionStore from 'ember-simple-auth/session-stores/cookie';
+
+let warnings;
+registerWarnHandler((message, options, next) => {
+  // in case a deprecation is issued before a test is started
+  if (!warnings) {
+    warnings = [];
+  }
+
+  warnings.push(message);
+  next(message, options);
+});
 
 export default function(options) {
+  let sinon;
   let store;
   let createStore;
   let renew;
@@ -20,6 +32,7 @@ export default function(options) {
 
   // eslint-disable-next-line mocha/no-top-level-hooks
   beforeEach(function() {
+    sinon = sinonjs.sandbox.create();
     createStore = options.createStore;
     renew = options.renew;
     sync = options.sync;
@@ -32,18 +45,13 @@ export default function(options) {
 
   // eslint-disable-next-line mocha/no-top-level-hooks
   afterEach(function() {
-    cookieService.read.restore();
-    cookieService.write.restore();
+    sinon.restore();
     store.clear();
   });
 
   describe('#persist', function() {
     beforeEach(function() {
-      sinon.spy(CookieSessionStore.prototype, '_warn');
-    });
-
-    afterEach(function() {
-      CookieSessionStore.prototype._warn.restore();
+      warnings = [];
     });
 
     it('respects the configured cookieName', function() {
@@ -103,7 +111,8 @@ export default function(options) {
           cookieExpirationTime: 60
         });
 
-        expect(CookieSessionStore.prototype._warn).to.have.been.calledWith('The recommended minimum value for `cookieExpirationTime` is 90 seconds. If your value is less than that, the cookie may expire before its expiration time is extended (expiration time is extended every 60 seconds).');
+        expect(warnings).to.have.length(1);
+        expect(warnings[0]).to.equal('The recommended minimum value for `cookieExpirationTime` is 90 seconds. If your value is less than that, the cookie may expire before its expiration time is extended (expiration time is extended every 60 seconds).');
 
         done();
       });
@@ -299,7 +308,7 @@ export default function(options) {
       });
 
       next(() => {
-        expect(cookieSpy).to.have.been.called.once;
+        expect(cookieSpy).to.have.been.calledOnce;
         done();
       });
     });

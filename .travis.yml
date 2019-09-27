@@ -1,44 +1,79 @@
----
+branches:
+  only:
+    - master
+    - /^\d+\.\d+\.\d+/  # npm version tags
+
 language: node_js
 node_js:
   - "6"
 
-sudo: false
-dist: trusty
-
 addons:
   chrome: stable
-
-env:
-  secure: IVCX1o8nMAKAKxj2cXE6a2A8xmnt3Gj72ocyjT1vhZutEJ1z7wu3Xl/r6Q0fhlaux3+ZNz/KV6Lax6NW8KgC/Wo1+B5SF2RWMLGX+exglf5zUXT3wzaOq8LcEyQ7SGfsuovHa8ij3dMM4UWjl5lE3cM1M1KjxlekniUF9nFxZd4=
-  matrix:
-    - SCRIPT=test:all
-    - SCRIPT=test:fastboot
-    - SCRIPT=test:node
 
 cache:
   yarn: true
 
+env:
+  secure: IVCX1o8nMAKAKxj2cXE6a2A8xmnt3Gj72ocyjT1vhZutEJ1z7wu3Xl/r6Q0fhlaux3+ZNz/KV6Lax6NW8KgC/Wo1+B5SF2RWMLGX+exglf5zUXT3wzaOq8LcEyQ7SGfsuovHa8ij3dMM4UWjl5lE3cM1M1KjxlekniUF9nFxZd4=
+
+jobs:
+  fail_fast: true
+  allow_failures:
+    - env: SCRIPT="test:one ember-beta"
+    - env: SCRIPT="test:one ember-canary"
+    - env: SCRIPT=test:fastboot
+
+  include:
+    # runs linting and tests with current locked deps
+    - stage: 'Basic Tests'
+      name: 'Lint'
+      env: SCRIPT=lint
+
+    - name: 'Fixed Dependencies'
+      env: SCRIPT="test"
+
+    - name: 'Floating Dependencies'
+      env: SCRIPT="test"
+      install: yarn install --no-lockfile
+
+    # we recommend new addons test the current and previous LTS
+    # as well as latest stable release (bonus points to beta/canary)
+    - stage: 'Additional Tests'
+      env: SCRIPT="test:one ember-1.12"
+    - env: SCRIPT="test:one ember-1.13"
+    - env: SCRIPT="test:one ember-2.0"
+    - env: SCRIPT="test:one ember-lts-2.4"
+    - env: SCRIPT="test:one ember-lts-2.8"
+    - env: SCRIPT="test:one ember-lts-2.12"
+    - env: SCRIPT="test:one ember-lts-2.16"
+    - env: SCRIPT="test:one ember-lts-2.18"
+    - env: SCRIPT="test:one ember-3.0"
+    - env: SCRIPT="test:one ember-beta"
+    - env: SCRIPT=test:node
+    - env: SCRIPT=test:fastboot
+    - env: SCRIPT="test:one ember-canary"
+
+    - stage: 'Deploy'
+      if: tag IS present
+      script: skip     # usually you do not want to rerun any tests
+      deploy:
+        provider: npm
+        email: info@simplabs.com
+        api_key:
+          secure: YQTd0tNPpbEkYtuYiFZr8B4AEc4onfcwkY6kW9+fjuqGHV+fgaIimSRs9TdozWEWYkLZEegKdsT8q2zn9ucWh6LmqLM74CUVtiDqLdDviFzwkjk81eDamusJSS4kHq/Jwv1M/Kq0InJlkqPbK/Ka8asSSvjFaBzVNMBqxxYfBLlCHfA8oXGIg02t3ATzdfeYRNklc0aF9drtqXMJdls5grn9M94MpchzIg9uD8wwIDOEkulYEv3BGiNvHak4bKZB4CtJLGfpT2lk/+hvEa848/y31oLQZVM8Tu2WPuumeedBHQOUzAXjoZgk27U9RLJnRqqdNoTVPnA5ylFG0r76zsfnpVFdsjt0O892d8s+SDApELligW7bJn/WX4TsDgGOjZKlD+woSSksIesPdAb3TvUDBGa+ZfiX42CSHwlB5w2VWZtf0lGn2OUIQ+Xa/n5OF5W5E+rWDBUiCSOsTr0Fv+3HTOhI/0OYLIF1n6ivHZVTiYaPwiiOXDhuYWxKR4ggEe9c9dlH+Vuebsqn21TsBCjhgIS6iyzQUjEwsckF7aL6fDRbg7kuZ0m1e82TtrLE+TAUZ2Lm/KvXPx80sskEDFlV/avOHMjr8naaopQpOe2zOlwWpTiYFKrCJbfjHzKiK0p/6BPeaYwGGMq0ritMMWWjFaOOVshUO9QapHfut0U=
+        on:
+          tags: true
+          repo: simplabs/ember-simple-auth
+
 before_install:
   - curl -o- -L https://yarnpkg.com/install.sh | bash
   - export PATH=$HOME/.yarn/bin:$PATH
-  - yarn global add phantomjs-prebuilt
-  - phantomjs --version
 
 install:
-  - yarn install --no-lockfile
+  - yarn install
 
 script:
-  - npm run $SCRIPT
-
-deploy:
-  provider: npm
-  email: info@simplabs.com
-  api_key:
-    secure: dKp+BvoSv8vUN90m9fH2oOK/sQ12K5B5BrWjfn1m2evpc9TFZGHLlqSsAw4Cq9JmK7SgRKsuh4O2k1CO8QAXW6mMjD/NSGJfBz+grdXE20kqOlIPvj9sQ9PVpqgmTA5bZvhbhXn8ybKqgTabZZrED9eMkrSqMN5xU1oW414DNwQ=
-  on:
-    tags: true
-    repo: simplabs/ember-simple-auth
+  - yarn run $SCRIPT
 
 after_deploy:
   - npm i -g now

@@ -1,16 +1,39 @@
 import { describe, beforeEach, it } from 'mocha';
 import { expect } from 'chai';
-import sinon from 'sinon';
+import sinonjs from 'sinon';
 import Devise from 'ember-simple-auth/authorizers/devise';
+import { registerDeprecationHandler } from '@ember/debug';
 
 describe('DeviseAuthorizer', () => {
+  let sinon;
   let authorizer;
   let block;
   let data;
 
   beforeEach(function() {
+    sinon = sinonjs.sandbox.create();
     authorizer = Devise.create();
     block = sinon.spy();
+  });
+
+  afterEach(function() {
+    sinon.restore();
+  });
+
+  it('shows deprecation warning from BaseAuthorizer', function() {
+    let warnings;
+    registerDeprecationHandler((message, options, next) => {
+      // in case a deprecation is issued before a test is started
+      if (!warnings) {
+        warnings = [];
+      }
+
+      warnings.push(message);
+      next(message, options);
+    });
+    authorizer = Devise.create();
+
+    expect(warnings[0]).to.eq('Ember Simple Auth: Authorizers are deprecated in favour of setting headers directly.');
   });
 
   describe('#authorize', function() {

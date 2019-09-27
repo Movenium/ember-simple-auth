@@ -9,6 +9,7 @@ import {
   merge,
   assign as emberAssign
 } from '@ember/polyfills';
+import { deprecate } from '@ember/application/deprecations';
 import Ember from 'ember';
 import BaseAuthenticator from './base';
 import fetch from 'fetch';
@@ -52,6 +53,17 @@ export default BaseAuthenticator.extend({
     @public
   */
   clientId: null,
+
+  /**
+   The OAuth2 standard is to send the client_id as a query parameter. This is a
+   feature flag that turns on the correct behavior for OAuth2 requests.
+
+   @property sendClientIdAsQueryParam
+   @type Boolean
+   @default false
+   @public
+  */
+  sendClientIdAsQueryParam: false,
 
   /**
     The endpoint on the server that authentication and token refresh requests
@@ -106,18 +118,17 @@ export default BaseAuthenticator.extend({
     @default a random number between 5 and 10
     @public
   */
-  tokenRefreshOffset: computed(function() {
+  get tokenRefreshOffset() {
     const min = 5;
     const max = 10;
 
     return (Math.floor(Math.random() * (max - min)) + min) * 1000;
-  }).volatile(),
+  },
 
   _refreshTokenTimeout: null,
 
   _clientIdHeader: computed('clientId', function() {
     const clientId = this.get('clientId');
-
     if (!isEmpty(clientId)) {
       const base64ClientId = window.base64.encode(clientId.concat(':'));
       return { Authorization: `Basic ${base64ClientId}` };
@@ -214,6 +225,36 @@ export default BaseAuthenticator.extend({
     method also schedules refresh requests for the access token before it
     expires.__
 
+    The server responses are expected to look as defined in the spec (see
+    http://tools.ietf.org/html/rfc6749#section-5). The response to a successful
+    authentication request should be:
+
+    ```json
+    HTTP/1.1 200 OK
+    Content-Type: application/json;charset=UTF-8
+
+    {
+      "access_token":"2YotnFZFEjr1zCsicMWpAA",
+      "token_type":"bearer",
+      "expires_in":3600, // optional
+      "refresh_token":"tGzv3JOkF0XG5Qx2TlKWIA" // optional
+    }
+    ```
+
+    The response for a failing authentication request should be:
+
+    ```json
+    HTTP/1.1 400 Bad Request
+    Content-Type: application/json;charset=UTF-8
+
+    {
+      "error":"invalid_grant"
+    }
+    ```
+
+    A full list of error codes can be found
+    [here](https://tools.ietf.org/html/rfc6749#section-5.2).
+
     @method authenticate
     @param {String} identification The resource owner username
     @param {String} password The resource owner password
@@ -223,6 +264,17 @@ export default BaseAuthenticator.extend({
     @public
   */
   authenticate(identification, password, scope = [], headers = {}) {
+    if (!this.get('sendClientIdAsQueryParam')) {
+      deprecate(`Ember Simple Auth: Client ID as Authorization Header is deprecated in favour of Client ID as Query String Parameter.`,
+        false,
+        {
+          id: 'ember-simple-auth.oauth2-password-grant-authenticator.client-id-as-authorization',
+          until: '2.0.0',
+          url: 'https://github.com/simplabs/ember-simple-auth#deprecation-of-client-id-as-header',
+        }
+      );
+    }
+
     return new RSVP.Promise((resolve, reject) => {
       const data = { 'grant_type': 'password', username: identification, password };
       const serverTokenEndpoint = this.get('serverTokenEndpoint');
@@ -306,6 +358,13 @@ export default BaseAuthenticator.extend({
   makeRequest(url, data, headers = {}) {
     headers['Content-Type'] = 'application/x-www-form-urlencoded';
 
+    if (this.get('sendClientIdAsQueryParam')) {
+      const clientId = this.get('clientId');
+      if (!isEmpty(clientId)) {
+        data['client_id'] = this.get('clientId');
+      }
+    }
+
     const body = keys(data).map((key) => {
       return `${encodeURIComponent(key)}=${encodeURIComponent(data[key])}`;
     }).join('&');
@@ -316,9 +375,11 @@ export default BaseAuthenticator.extend({
       method: 'POST'
     };
 
-    const clientIdHeader = this.get('_clientIdHeader');
-    if (!isEmpty(clientIdHeader)) {
-      merge(options.headers, clientIdHeader);
+    if (!this.get('sendClientIdAsQueryParam')) {
+      const clientIdHeader = this.get('_clientIdHeader');
+      if (!isEmpty(clientIdHeader)) {
+        assign(options.headers, clientIdHeader);
+      }
     }
 
     return new RSVP.Promise((resolve, reject) => {

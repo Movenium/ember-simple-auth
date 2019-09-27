@@ -1,14 +1,16 @@
 import RSVP from 'rsvp';
 import { describe, beforeEach, it } from 'mocha';
 import { expect } from 'chai';
-import sinon from 'sinon';
+import sinonjs from 'sinon';
 import Torii from 'ember-simple-auth/authenticators/torii';
 
 describe('ToriiAuthenticator', () => {
+  let sinon;
   let authenticator;
   let torii;
 
   beforeEach(function() {
+    sinon = sinonjs.sandbox.create();
     torii = {
       fetch() {},
       open() {},
@@ -17,12 +19,21 @@ describe('ToriiAuthenticator', () => {
     authenticator = Torii.create({ torii });
   });
 
+  afterEach(function() {
+    sinon.restore();
+  });
+
   describe('#restore', function() {
     function itDoesNotRestore(data) {
       it('returns a rejecting promise', function() {
-        return authenticator.restore(data).catch(() => {
-          expect(true).to.be.true;
-        });
+        return authenticator.restore(data).then(
+          () => {
+            expect(false).to.be.true;
+          },
+          () => {
+            expect(true).to.be.true;
+          }
+        );
       });
     }
 
