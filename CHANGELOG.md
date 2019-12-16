@@ -1,5 +1,62 @@
 # Changelog
 
+## v2.1.0 (2019-10-31)
+
+#### :rocket: Enhancement
+* [#1996](https://github.com/simplabs/ember-simple-auth/pull/1996) Deprecate the old testing API ([@marcoow](https://github.com/marcoow))
+* [#1994](https://github.com/simplabs/ember-simple-auth/pull/1994) Deprecate authorize method ([@marcoow](https://github.com/marcoow))
+
+#### :bug: Bug Fix
+* [#1995](https://github.com/simplabs/ember-simple-auth/pull/1995) Fix deprecation until versions ([@marcoow](https://github.com/marcoow))
+
+#### Committers: 2
+- Marco Otte-Witte ([@marcoow](https://github.com/marcoow))
+- [@dependabot-preview[bot]](https://github.com/apps/dependabot-preview)
+
+## v2.0.0 (2019-10-29)
+
+#### :boom: Breaking Change
+* [#1956](https://github.com/simplabs/ember-simple-auth/pull/1956) Drop support for Node 6 ([@marcoow](https://github.com/marcoow))
+
+#### :rocket: Enhancement
+* [#1985](https://github.com/simplabs/ember-simple-auth/pull/1985) deprecate rejectWithResponse=false ([@marcoow](https://github.com/marcoow))
+* [#1986](https://github.com/simplabs/ember-simple-auth/pull/1986) Deprecate data adapter mixin elements ([@marcoow](https://github.com/marcoow))
+
+#### :bug: Bug Fix
+* [#1919](https://github.com/simplabs/ember-simple-auth/pull/1919) Don't schedule token refresh checks in FastBoot ([@trek](https://github.com/trek))
+
+#### :memo: Documentation
+* [#1963](https://github.com/simplabs/ember-simple-auth/pull/1963) update current user guide ([@mcfiredrill](https://github.com/mcfiredrill))
+* [#1924](https://github.com/simplabs/ember-simple-auth/pull/1924) Fix outdated guide. ([@ExpDev07](https://github.com/ExpDev07))
+* [#1832](https://github.com/simplabs/ember-simple-auth/pull/1832) Add Octane GitHub guide. ([@muziejus](https://github.com/muziejus))
+
+#### :house: Internal
+* [#1989](https://github.com/simplabs/ember-simple-auth/pull/1989) add missing test environments ([@marcoow](https://github.com/marcoow))
+* [#1917](https://github.com/simplabs/ember-simple-auth/pull/1917) Fix computed property override deprecations ([@josemarluedke](https://github.com/josemarluedke))
+
+#### Committers: 7
+- ExpDev ([@ExpDev07](https://github.com/ExpDev07))
+- Josemar Luedke ([@josemarluedke](https://github.com/josemarluedke))
+- Marco Otte-Witte ([@marcoow](https://github.com/marcoow))
+- Moacir P. de Sá Pereira ([@muziejus](https://github.com/muziejus))
+- Tony Miller ([@mcfiredrill](https://github.com/mcfiredrill))
+- Trek Glowacki ([@trek](https://github.com/trek))
+- [@dependabot-preview[bot]](https://github.com/apps/dependabot-preview)
+
+
+## v1.9.2 (2019-07-18)
+
+#### :rocket: Enhancement
+* [#1900](https://github.com/simplabs/ember-simple-auth/pull/1900) Rename `_router` property to `_authRouter` to avoid conflicts ([@backspace](https://github.com/backspace))
+
+#### :house: Internal
+* [#1902](https://github.com/simplabs/ember-simple-auth/pull/1902) CI: Update npm API key ([@Turbo87](https://github.com/Turbo87))
+
+#### Committers: 2
+- Buck Doyle ([@backspace](https://github.com/backspace))
+- Tobias Bieniek ([@Turbo87](https://github.com/Turbo87))
+
+
 ## v1.9.1 (2019-07-12)
 
 #### :house: Internal

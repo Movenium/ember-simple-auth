@@ -13,6 +13,7 @@ import { deprecate } from '@ember/application/deprecations';
 import Ember from 'ember';
 import BaseAuthenticator from './base';
 import fetch from 'fetch';
+import isFastBoot from 'ember-simple-auth/utils/is-fastboot';
 
 const assign = emberAssign || merge;
 const keys = Object.keys || emberKeys; // Ember.keys deprecated in 1.13
@@ -151,7 +152,7 @@ export default BaseAuthenticator.extend({
   */
   rejectWithXhr: computed.deprecatingAlias('rejectWithResponse', {
     id: `ember-simple-auth.authenticator.reject-with-xhr`,
-    until: '2.0.0'
+    until: '3.0.0'
   }),
 
   /**
@@ -269,7 +270,7 @@ export default BaseAuthenticator.extend({
         false,
         {
           id: 'ember-simple-auth.oauth2-password-grant-authenticator.client-id-as-authorization',
-          until: '2.0.0',
+          until: '3.0.0',
           url: 'https://github.com/simplabs/ember-simple-auth#deprecation-of-client-id-as-header',
         }
       );
@@ -279,6 +280,14 @@ export default BaseAuthenticator.extend({
       const data = { 'grant_type': 'password', username: identification, password };
       const serverTokenEndpoint = this.get('serverTokenEndpoint');
       const useResponse = this.get('rejectWithResponse');
+
+      if (!useResponse) {
+        deprecate('Ember Simple Auth: The default value of false for the rejectWithResponse property should no longer be relied on; instead set the property to true to enable the future behavior.', false, {
+          id: `ember-simple-auth.authenticator.no-reject-with-response`,
+          until: '3.0.0'
+        });
+      }
+
       const scopesString = makeArray(scope).join(' ');
       if (!isEmpty(scopesString)) {
         data.scope = scopesString;
@@ -403,7 +412,7 @@ export default BaseAuthenticator.extend({
   },
 
   _scheduleAccessTokenRefresh(expiresIn, expiresAt, refreshToken) {
-    const refreshAccessTokens = this.get('refreshAccessTokens');
+    const refreshAccessTokens = this.get('refreshAccessTokens') && !isFastBoot();
     if (refreshAccessTokens) {
       const now = (new Date()).getTime();
       if (isEmpty(expiresAt) && !isEmpty(expiresIn)) {
@@ -436,7 +445,7 @@ export default BaseAuthenticator.extend({
         });
       }, (response) => {
         warn(`Access token could not be refreshed - server responded with ${response.responseJSON}.`, false, { id: 'ember-simple-auth.failedOAuth2TokenRefresh' });
-        reject(response);
+        reject();
       });
     });
   },
