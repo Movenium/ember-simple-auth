@@ -1,6 +1,5 @@
 'use strict';
 
-/* eslint-env node */
 /* eslint-disable no-var, object-shorthand */
 
 var EmberAddon = require('ember-cli/lib/broccoli/ember-addon');
@@ -13,7 +12,7 @@ module.exports = function(defaults) {
   var app = new EmberAddon(defaults, {
     storeConfigInMeta: true,
     'ember-bootstrap': {
-      bootstrapVersion: 3,
+      bootstrapVersion: 4,
       importBootstrapFont: false,
       importBootstrapCSS: true
     },
@@ -23,6 +22,9 @@ module.exports = function(defaults) {
     sourcemaps: {
       enabled: true,
       extensions: ['js']
+    },
+    'ember-cli-babel': {
+      includePolyfill: true
     }
   });
 

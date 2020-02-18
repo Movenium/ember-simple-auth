@@ -1,31 +1,39 @@
 import ObjectProxy from '@ember/object/proxy';
+import { setOwner } from '@ember/application';
 import Evented from '@ember/object/evented';
 import { next } from '@ember/runloop';
-import { set } from '@ember/object';
+import EmberObject, { set } from '@ember/object';
 import { describe, beforeEach, it } from 'mocha';
+import { setupTest } from 'ember-mocha';
 import { expect } from 'chai';
-import sinon from 'sinon';
+import sinonjs from 'sinon';
 import Session from 'ember-simple-auth/services/session';
 
-import createWithContainer from '../../helpers/create-with-container';
-
 describe('SessionService', () => {
+  setupTest();
+
+  let sinon;
   let sessionService;
   let session;
-  let authorizer;
 
   beforeEach(function() {
+    sinon = sinonjs.createSandbox();
     session = ObjectProxy.extend(Evented, {
-      content: {}
+      init() {
+        this._super(...arguments);
+        this.content = {};
+      }
     }).create();
-    authorizer = {
+
+    this.owner.register('authorizer:custom', EmberObject.extend({
       authorize() {}
-    };
-    let container = { lookup() {} };
-    let stub = sinon.stub(container, 'lookup');
-    stub.withArgs('authorizer').returns(authorizer);
-    stub.withArgs('bad-authorizer').returns(undefined);
-    sessionService = createWithContainer(Session, { session }, container);
+    }));
+    sessionService = Session.create({ session });
+    setOwner(sessionService, this.owner);
+  });
+
+  afterEach(function() {
+    sinon.restore();
   });
 
   it('forwards the "authenticationSucceeded" event from the session', function(done) {
@@ -157,41 +165,6 @@ describe('SessionService', () => {
 
     it("returns the session's invalidation return value", function() {
       expect(sessionService.invalidate()).to.eq('value');
-    });
-  });
-
-  describe('authorize', function() {
-    describe('when the session is authenticated', function() {
-      beforeEach(function() {
-        sessionService.set('isAuthenticated', true);
-        sessionService.set('data', { authenticated: { some: 'data' } });
-      });
-
-      it('authorizes with the authorizer', function() {
-        sinon.spy(authorizer, 'authorize');
-        sessionService.authorize('authorizer', 'block');
-
-        expect(authorizer.authorize).to.have.been.calledWith({ some: 'data' }, 'block');
-      });
-
-      it("throws an error when the authorizer doesn't exist", function() {
-        expect(() => {
-          sessionService.authorize('bad-authorizer', 'block');
-        }).to.throw(Error, /No authorizer for factory/);
-      });
-    });
-
-    describe('when the session is not authenticated', function() {
-      beforeEach(function() {
-        sessionService.set('isAuthenticated', false);
-      });
-
-      it('does not authorize', function() {
-        sinon.spy(authorizer, 'authorize');
-        sessionService.authorize('authorizer', 'block');
-
-        expect(authorizer.authorize).to.not.have.been.called;
-      });
     });
   });
 });

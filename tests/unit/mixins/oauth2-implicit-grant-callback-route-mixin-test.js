@@ -1,16 +1,31 @@
+/* eslint-disable ember/no-new-mixins */
+
 import EmberObject from '@ember/object';
 import RSVP from 'rsvp';
 import Route from '@ember/routing/route';
 import { isEmpty } from '@ember/utils';
-import { it } from 'ember-mocha';
-import { describe, beforeEach } from 'mocha';
+import { setOwner } from '@ember/application';
+import { it, setupTest } from 'ember-mocha';
+import { describe, beforeEach, afterEach } from 'mocha';
 import { expect } from 'chai';
-import sinon from 'sinon';
+import sinonjs from 'sinon';
 import OAuth2ImplicitGrantCallbackRouteMixin from 'ember-simple-auth/mixins/oauth2-implicit-grant-callback-route-mixin';
+import * as LocationUtil from 'ember-simple-auth/utils/location';
 
 describe('OAuth2ImplicitGrantCallbackRouteMixin', function() {
+  setupTest();
+
+  let sinon;
   let route;
   let session;
+
+  beforeEach(function() {
+    sinon = sinonjs.createSandbox();
+  });
+
+  afterEach(function() {
+    sinon.restore();
+  });
 
   describe('#activate', function() {
     beforeEach(function() {
@@ -30,13 +45,14 @@ describe('OAuth2ImplicitGrantCallbackRouteMixin', function() {
         authenticator: 'authenticator:oauth2',
         _isFastBoot: false
       }).create({ session });
+      setOwner(route, this.owner);
 
       sinon.spy(route, 'transitionTo');
     });
 
     it('correctly passes the auth parameters if authentication succeeds', function(done) {
       // it isn't possible to stub window.location.hash so we stub a wrapper function instead
-      sinon.stub(route, '_windowLocationHash').returns('#/routepath#access_token=secret-token');
+      sinon.stub(LocationUtil, 'default').returns({ hash: '#/routepath#access_token=secret-token' });
 
       route.activate();
       setTimeout(() => {
